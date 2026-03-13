@@ -26,7 +26,6 @@ O Windows pode bloquear a execução de scripts necessários para o Node.js. Par
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
----
 
 ```
 ## 💻 Executando a Aplicação dentro do VS Code
@@ -55,4 +54,3 @@ npm start
 *O navegador padrão será aberto automaticamente no endereço `http://localhost:3000` com a interface operacional pronta para uso.*
 
 
-```
