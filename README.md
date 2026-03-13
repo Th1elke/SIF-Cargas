@@ -28,6 +28,7 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 ---
 
+```
 ## 💻 Executando a Aplicação dentro do VS Code
 
 A arquitetura exige que o Backend (motor de regras) e o Frontend (interface visual) operem de forma simultânea. Para isso, utilize **dois terminais separados** no próprio VS Code.
