@@ -25,3 +25,14 @@ O Windows pode bloquear a execução de scripts necessários para o Node.js. Par
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
+---
+
+## 🚀 Configuração do Ambiente
+
+Após clonar o repositório, abra a pasta principal do projeto no VS Code e configure as bibliotecas necessárias.
+
+### 1. Dependências do Backend (API)
+No terminal integrado do VS Code, certifique-se de estar na pasta raiz do projeto e instale as bibliotecas do Python:
+```powershell
+python -m pip install fastapi uvicorn pydantic
