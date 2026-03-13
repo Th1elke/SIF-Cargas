@@ -1,8 +1,5 @@
-```markdown
 # Sistema Integrado de Monitoramento de Cargas (WIM)
 
-> **Projeto Integrador - Equipe 3 | UNIJUÍ**
-> Protótipo de software para monitoramento de rodovias, integrando pesagem em movimento (Weigh-In-Motion) com inteligência de conformidade fiscal e telemetria viária.
 
 ---
 
@@ -28,35 +25,6 @@ O Windows pode bloquear a execução de scripts necessários para o Node.js. Par
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-
-```
-
-*Pressione `A` (Sim para Todos) se o sistema solicitar confirmação.*
-
----
-
-## 🚀 Configuração do Ambiente
-
-Após clonar o repositório, abra a pasta principal do projeto no VS Code e configure as bibliotecas necessárias.
-
-### 1. Dependências do Backend (API)
-
-No terminal integrado do VS Code, certifique-se de estar na pasta raiz do projeto e instale as bibliotecas do Python:
-
-```powershell
-python -m pip install fastapi uvicorn pydantic
-
-```
-
-### 2. Dependências do Frontend (Painel React)
-
-Ainda no terminal, acesse a pasta do painel visual e instale os pacotes do Node.js:
-
-```powershell
-cd painel-rodovia
-npm install
-
-```
 
 ---
 
