@@ -27,11 +27,18 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('ALL');
 
+  // Controle das linhas expandidas do Histórico (detalhes da simulação)
+  const [expandedRows, setExpandedRows] = useState({});
+  const toggleRow = (key) => setExpandedRows(prev => ({ ...prev, [key]: !prev[key] }));
+
   // Sistema de Notificações (Toasts)
   const [toasts, setToasts] = useState([]);
 
-  const [stats, setStats] = useState({ total_passagens: 0, distribuicao_acoes: {}, velocidade_media_kmh: 0, fluxo_horario: [] });
+  const [stats, setStats] = useState({ total_passagens: 0, distribuicao_acoes: {}, velocidade_media_kmh: 0, fluxo_horario: [], agrupamento: 'hora' });
   const [historicoData, setHistoricoData] = useState([]);
+
+  // Filtro de periodo do Dashboard (diario / semanal / mensal)
+  const [dashPeriodo, setDashPeriodo] = useState('mensal');
 
   const [regForm, setRegForm] = useState({ cnpj: '', placa: '', nfe: '', protocolo: '', justificativa: '' });
   const [regStatus, setRegStatus] = useState(null);
@@ -43,11 +50,13 @@ function App() {
   useEffect(() => {
     if (activeTab === 'dashboard') carregarEstatisticas();
     if (activeTab === 'historico') carregarHistorico();
-  }, [activeTab, resultados, simulating]);
+  }, [activeTab, resultados, simulating, dashPeriodo]);
 
   const carregarEstatisticas = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/api/estatisticas');
+      const res = await axios.get('http://localhost:8000/api/estatisticas', {
+        params: { periodo: dashPeriodo }
+      });
       setStats(res.data);
     } catch (error) {
       console.error("Erro ao carregar estatisticas", error);
@@ -210,12 +219,22 @@ function App() {
   const exportarRelatorioCSV = () => {
     if (historicoData.length === 0) return;
 
-    let csvContent = "Data/Hora;Placa;Rodovia (Trecho RS);Velocidade (km/h);Peso Estatico Calculado (kg);Status (Acao)\n";
-    
+    let csvContent = "Data/Hora;Placa;Veiculo;Ano;Classe DNIT;Transportador;CNPJ;Carga;Rota;Rodovia (Trecho RS);Velocidade (km/h);Peso Estatico Calculado (kg);Status (Acao)\n";
+
     historicoData.forEach(row => {
+      const veiculo = (row.fabricante || row.modelo) ? `${row.fabricante || ''} ${row.modelo || ''}`.trim() : 'N/D';
+      const classe = row.classe_qfv ? `${row.classe_qfv}${row.descricao_classe ? ' (' + row.descricao_classe + ')' : ''}` : 'N/D';
+      const rota = (row.origem || row.destino) ? `${row.origem || '?'} - ${row.destino || '?'}` : 'N/D';
       const linha = [
         row.timestamp,
         row.placa,
+        veiculo,
+        row.ano || 'N/D',
+        classe,
+        row.transportadora || 'N/D',
+        row.empresa_cnpj || 'N/D',
+        row.carga || 'N/D',
+        rota,
         row.rodovia || 'N/D',
         row.velocidade_kmh || 0,
         row.peso_estatico_estimado_kg || 0,
@@ -292,11 +311,28 @@ function App() {
 
     return (
       <div className="view-container animate-fade">
-        <div className="view-header glass-panel">
-          <h2>Dashboard Operacional</h2>
-          <p>Visao analitica em tempo real da rede HS-WIM</p>
+        <div className="view-header glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+          <div>
+            <h2>Dashboard Operacional</h2>
+            <p>Visao analitica em tempo real da rede HS-WIM</p>
+          </div>
+          <div className="period-filter">
+            {[
+              { key: 'diario', label: 'Diário' },
+              { key: 'semanal', label: 'Semanal' },
+              { key: 'mensal', label: 'Mensal' }
+            ].map(opt => (
+              <button
+                key={opt.key}
+                className={`period-btn ${dashPeriodo === opt.key ? 'active' : ''}`}
+                onClick={() => setDashPeriodo(opt.key)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
-        
+
         <div className="kpi-grid">
           <div className="kpi-card glass-panel">
             <div className="kpi-data">
@@ -341,7 +377,7 @@ function App() {
           </div>
 
           <div className="chart-card glass-panel">
-            <h3 className="chart-title">Fluxo Volumetrico (Passagens/Hora)</h3>
+            <h3 className="chart-title">Fluxo Volumetrico (Passagens/{stats.agrupamento === 'dia' ? 'Dia' : 'Hora'})</h3>
             <div className="chart-wrapper">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={barData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
@@ -454,6 +490,70 @@ function App() {
     </div>
   );
 
+  // Formatação segura de números para o bloco de detalhes
+  const fmtNum = (n) => (typeof n === 'number' ? n.toLocaleString('pt-BR') : 'N/D');
+
+  // Bloco expansível com TODOS os dados da simulação (igual ao cartão do Free-Flow)
+  const renderDetalhesRegistro = (reg) => {
+    const temDetalhe = reg.fabricante || reg.classe_qfv || reg.nfe_numero;
+    if (!temDetalhe) {
+      return (
+        <div className="detail-empty">
+          Registo antigo sem dados detalhados de simulação.
+        </div>
+      );
+    }
+    const alertas = reg.alertas || {};
+    return (
+      <div className="result-grid detail-grid">
+        <div className="result-col">
+          <h4>Base SENATRAN</h4>
+          <ul>
+            <li><span>Veiculo:</span> {reg.fabricante} {reg.modelo} {reg.ano ? `(${reg.ano})` : ''}</li>
+            <li><span>Transportador:</span> {reg.transportadora || 'N/D'}</li>
+            <li><span>CNPJ:</span> <span className="hash-text">{reg.empresa_cnpj || 'N/D'}</span></li>
+            <li><span>Classe DNIT:</span> {reg.classe_qfv || 'N/D'} {reg.descricao_classe ? `(${reg.descricao_classe})` : ''}</li>
+            <li><span>PBT Legal:</span> {fmtNum(reg.pbt_legal_kg)} kg</li>
+            {alertas.divergencia_eixos && (
+              <li className="text-danger">
+                Alerta: Divergencia de Eixos! (Lido: {reg.eixos_lidos} vs Ficha: {reg.eixos_oficiais})
+              </li>
+            )}
+          </ul>
+        </div>
+
+        <div className="result-col">
+          <h4>Base SEFAZ</h4>
+          <ul>
+            <li><span>NF-e:</span> <span className="hash-text">{reg.nfe_numero || 'N/D'}</span></li>
+            <li><span>Carga Declarada:</span> {reg.carga || 'N/D'}</li>
+            <li><span>Rota:</span> {reg.origem || '?'} - {reg.destino || '?'}</li>
+            <li><span>Valor Declarado:</span> {typeof reg.valor_carga === 'number'
+              ? `R$ ${reg.valor_carga.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+              : 'N/D'}</li>
+            <li><span>Peso na NF-e:</span> {fmtNum(reg.peso_declarado_kg)} kg</li>
+            {alertas.fiscal_sefaz && <li className="text-danger">Alerta: Sonegacao Fiscal (Subfaturamento)</li>}
+          </ul>
+        </div>
+
+        <div className="result-col">
+          <h4>Telemetria WIM</h4>
+          <ul>
+            <li><span>Trecho Ativo:</span> <span style={{ color: '#3b82f6' }}>{reg.rodovia || 'N/D'}</span></li>
+            <li><span>Velocidade Pista:</span> {reg.velocidade_kmh || 0} km/h</li>
+            <li><span>DIF (Fator Impacto):</span> {typeof reg.dif === 'number' ? `+${(reg.dif * 100).toFixed(1)}%` : 'N/D'}</li>
+            <li className="highlight"><span>Massa Estatica Ponderada:</span> {fmtNum(reg.peso_estatico_estimado_kg)} kg</li>
+            <li><span>Limite por Eixo:</span> {fmtNum(reg.limite_por_eixo_kg)} kg</li>
+            {alertas.sobrepeso_eixo && reg.eixos_em_sobrepeso && reg.eixos_em_sobrepeso.length > 0 && (
+              <li className="text-danger">Sobrepeso nos eixos: {reg.eixos_em_sobrepeso.join(', ')}</li>
+            )}
+            <li><span>Retencao Cloud:</span> {(alertas.fiscal_sefaz || alertas.transito_daer) ? '11 Anos (BDE)' : '30 Dias (LGPD)'}</li>
+          </ul>
+        </div>
+      </div>
+    );
+  };
+
   const renderHistorico = () => {
     // Aplicação lógica dos Filtros
     const historicoFiltrado = historicoData.filter(reg => {
@@ -508,8 +608,12 @@ function App() {
             <table className="glass-table">
               <thead>
                 <tr>
+                  <th style={{ width: '40px' }}></th>
                   <th>Data / Hora</th>
                   <th>Placa</th>
+                  <th>Veiculo</th>
+                  <th>Transportador</th>
+                  <th>Carga / Rota</th>
                   <th>Trecho (Rodovia)</th>
                   <th>Velocidade</th>
                   <th>Massa Estatica</th>
@@ -517,22 +621,66 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {historicoFiltrado.length > 0 ? historicoFiltrado.map((reg, index) => (
-                  <tr key={index}>
-                    <td>{reg.timestamp}</td>
-                    <td><span className="hash-text">{reg.placa}</span></td>
-                    <td>{reg.rodovia || 'N/D'}</td>
-                    <td>{reg.velocidade_kmh || 0} km/h</td>
-                    <td>{reg.peso_estatico_estimado_kg ? reg.peso_estatico_estimado_kg.toLocaleString('pt-BR') : '0'} kg</td>
-                    <td>
-                      <span className={`badge ${getBadgeClass(reg.status)}`}>
-                        {reg.status.split('-')[0].trim()}
-                      </span>
-                    </td>
-                  </tr>
-                )) : (
+                {historicoFiltrado.length > 0 ? historicoFiltrado.map((reg, index) => {
+                  const rowKey = `${reg.timestamp}-${reg.placa}-${index}`;
+                  const isOpen = !!expandedRows[rowKey];
+                  return (
+                    <React.Fragment key={rowKey}>
+                      <tr className={`historico-row ${isOpen ? 'row-open' : ''}`} onClick={() => toggleRow(rowKey)}>
+                        <td>
+                          <span className={`expand-icon ${isOpen ? 'open' : ''}`}>›</span>
+                        </td>
+                        <td>{reg.timestamp}</td>
+                        <td><span className="hash-text">{reg.placa}</span></td>
+                        <td>
+                          {(reg.fabricante || reg.modelo) ? (
+                            <div className="vehicle-cell">
+                              <span className="vehicle-name">{reg.fabricante} {reg.modelo}{reg.ano ? ` (${reg.ano})` : ''}</span>
+                              {reg.classe_qfv && (
+                                <span className="vehicle-sub">{reg.classe_qfv} - {reg.descricao_classe || 'N/D'}</span>
+                              )}
+                            </div>
+                          ) : <span style={{ color: 'var(--text-secondary)' }}>N/D</span>}
+                        </td>
+                        <td>
+                          {reg.transportadora ? (
+                            <div className="vehicle-cell">
+                              <span className="vehicle-name">{reg.transportadora}</span>
+                              {reg.empresa_cnpj && <span className="vehicle-sub hash-text">{reg.empresa_cnpj}</span>}
+                            </div>
+                          ) : <span style={{ color: 'var(--text-secondary)' }}>N/D</span>}
+                        </td>
+                        <td>
+                          {reg.carga ? (
+                            <div className="vehicle-cell">
+                              <span className="vehicle-name">{reg.carga}</span>
+                              {(reg.origem || reg.destino) && (
+                                <span className="vehicle-sub">{reg.origem || '?'} - {reg.destino || '?'}</span>
+                              )}
+                            </div>
+                          ) : <span style={{ color: 'var(--text-secondary)' }}>N/D</span>}
+                        </td>
+                        <td>{reg.rodovia || 'N/D'}</td>
+                        <td>{reg.velocidade_kmh || 0} km/h</td>
+                        <td>{reg.peso_estatico_estimado_kg ? reg.peso_estatico_estimado_kg.toLocaleString('pt-BR') : '0'} kg</td>
+                        <td>
+                          <span className={`badge ${getBadgeClass(reg.status)}`}>
+                            {reg.status.split('-')[0].trim()}
+                          </span>
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr className="detail-row">
+                          <td colSpan="10">
+                            {renderDetalhesRegistro(reg)}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                }) : (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                    <td colSpan="10" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                       Nenhum registo encontrado para os filtros aplicados.
                     </td>
                   </tr>

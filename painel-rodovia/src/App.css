@@ -650,3 +650,143 @@ body {
   background-color: #ffffff; /* Fundo branco no modo claro */
   color: #1e293b; /* Texto escuro */
 }
+
+/* =========================================
+   FILTRO DE PERIODO DO DASHBOARD
+========================================= */
+.period-filter {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+}
+
+.period-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.period-btn:hover {
+  color: var(--text-primary);
+}
+
+.period-btn.active {
+  background: var(--primary-color);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+/* =========================================
+   DESCRICAO DO VEICULO NO HISTORICO
+========================================= */
+.vehicle-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+}
+
+.vehicle-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.vehicle-sub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* =========================================
+   LINHAS EXPANSIVEIS DO HISTORICO
+========================================= */
+.historico-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.historico-row:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.historico-row.row-open {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.expand-icon {
+  display: inline-block;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--primary-color);
+  transition: transform 0.2s ease;
+}
+
+.expand-icon.open {
+  transform: rotate(90deg);
+}
+
+.detail-row td {
+  padding: 0 !important;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 24px;
+}
+
+.detail-grid .result-col h4 {
+  margin-bottom: 10px;
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-grid .result-col ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-grid .result-col li {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.detail-grid .result-col li span:first-child {
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+.detail-grid .result-col li.highlight {
+  font-weight: 700;
+}
+
+.detail-grid .result-col li.text-danger span:first-child {
+  color: inherit;
+}
+
+.detail-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

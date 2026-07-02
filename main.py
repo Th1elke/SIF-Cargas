@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = FastAPI(
     title="API WIM-RS — Sistema Integrado de Monitoramento HS-WIM",
@@ -65,7 +65,39 @@ FROTA_BASE = [
     {"fab": "Scania", "mod": "R 450", "ano": 2019, "qfv": "3S3", "carga": "Papel e Celulose", "peso_nfe": 52000, "val": 130000, "transp": "Klabin", "cnpj": "89.636.920/0001-65", "orig": "Otacilio Costa/SC", "dest": "Porto Alegre/RS"},
     {"fab": "Iveco", "mod": "Stralis 600S44T", "ano": 2017, "qfv": "3S2S2", "carga": "Containers", "peso_nfe": 56500, "val": 850000, "transp": "Maersk Logistica", "cnpj": "02.589.654/0001-71", "orig": "Rio Grande/RS", "dest": "Novo Hamburgo/RS"},
     {"fab": "DAF", "mod": "CF 310", "ano": 2020, "qfv": "3C", "carga": "Racao Animal", "peso_nfe": 22000, "val": 55000, "transp": "Nutron", "cnpj": "45.123.987/0001-32", "orig": "Estrela/RS", "dest": "Santa Rosa/RS"},
-    {"fab": "Mercedes-Benz", "mod": "Atego 3030", "ano": 2023, "qfv": "4C", "carga": "Vidros", "peso_nfe": 28500, "val": 220000, "transp": "TransVidro", "cnpj": "78.456.123/0001-09", "orig": "Sao Paulo/SP", "dest": "Porto Alegre/RS"}
+    {"fab": "Mercedes-Benz", "mod": "Atego 3030", "ano": 2023, "qfv": "4C", "carga": "Vidros", "peso_nfe": 28500, "val": 220000, "transp": "TransVidro", "cnpj": "78.456.123/0001-09", "orig": "Sao Paulo/SP", "dest": "Porto Alegre/RS"},
+    {"fab": "Ford", "mod": "Cargo 2429", "ano": 2019, "qfv": "3C", "carga": "Refrigerantes", "peso_nfe": 22000, "val": 90000, "transp": "Rodonaves Transportes", "cnpj": "44.914.992/0001-02", "orig": "Porto Alegre/RS", "dest": "Erechim/RS"},
+    {"fab": "Scania", "mod": "R 500", "ano": 2023, "qfv": "3S3", "carga": "Acucar Cristal", "peso_nfe": 52000, "val": 115000, "transp": "Copersucar Logistica", "cnpj": "47.080.619/0001-17", "orig": "Cachoeira do Sul/RS", "dest": "Rio Grande/RS"},
+    {"fab": "Volvo", "mod": "FH 460", "ano": 2021, "qfv": "3S2S2", "carga": "Fertilizante NPK", "peso_nfe": 56000, "val": 175000, "transp": "Heringer Logistica", "cnpj": "22.266.175/0001-88", "orig": "Rio Grande/RS", "dest": "Cruz Alta/RS"},
+    {"fab": "Mercedes-Benz", "mod": "Actros 2546", "ano": 2022, "qfv": "3S3", "carga": "Cafe Torrado", "peso_nfe": 51000, "val": 320000, "transp": "Expresso Nepomuceno", "cnpj": "25.336.030/0001-02", "orig": "Porto Alegre/RS", "dest": "Sao Paulo/SP"},
+    {"fab": "DAF", "mod": "XF 480", "ano": 2024, "qfv": "3S3S3", "carga": "Etanol Anidro", "peso_nfe": 73000, "val": 260000, "transp": "Raizen Logistica", "cnpj": "33.453.598/0001-23", "orig": "Passo Fundo/RS", "dest": "Canoas/RS"},
+    {"fab": "Iveco", "mod": "S-Way 540", "ano": 2023, "qfv": "3S3S3", "carga": "Soja em Graos", "peso_nfe": 72500, "val": 190000, "transp": "Amaggi Logistica", "cnpj": "77.294.254/0001-94", "orig": "Cruz Alta/RS", "dest": "Rio Grande/RS"},
+    {"fab": "Volkswagen", "mod": "Meteor 28.460", "ano": 2022, "qfv": "3S3", "carga": "Racao Bovina", "peso_nfe": 51500, "val": 85000, "transp": "Nutricorp Transportes", "cnpj": "10.548.020/0001-31", "orig": "Carazinho/RS", "dest": "Bage/RS"},
+    {"fab": "Scania", "mod": "G 500", "ano": 2021, "qfv": "3S2S2", "carga": "Cimento Ensacado", "peso_nfe": 56000, "val": 60000, "transp": "Votorantim Cimentos", "cnpj": "01.637.895/0001-32", "orig": "Esteio/RS", "dest": "Santa Maria/RS"},
+    {"fab": "Volvo", "mod": "VM 330", "ano": 2020, "qfv": "4C", "carga": "Frangos Congelados", "peso_nfe": 28000, "val": 210000, "transp": "Sadia Logistica", "cnpj": "20.730.099/0001-94", "orig": "Marau/RS", "dest": "Porto Alegre/RS"},
+    {"fab": "Mercedes-Benz", "mod": "Atego 2730", "ano": 2019, "qfv": "4C", "carga": "Leite UHT", "peso_nfe": 28500, "val": 130000, "transp": "Cooperativa Languiru", "cnpj": "96.635.780/0001-90", "orig": "Teutonia/RS", "dest": "Caxias do Sul/RS"},
+    {"fab": "DAF", "mod": "CF 450", "ano": 2022, "qfv": "3S3", "carga": "Bobinas de Aco", "peso_nfe": 52500, "val": 520000, "transp": "Gerdau Logistica", "cnpj": "33.611.500/0001-19", "orig": "Sapucaia do Sul/RS", "dest": "Gravatai/RS"},
+    {"fab": "Iveco", "mod": "Tector 260E28", "ano": 2021, "qfv": "3C", "carga": "Eletrodomesticos", "peso_nfe": 20000, "val": 680000, "transp": "Electrolux Logistica", "cnpj": "76.487.032/0001-25", "orig": "Canoas/RS", "dest": "Santa Rosa/RS"},
+    {"fab": "Volkswagen", "mod": "Constellation 26.280", "ano": 2018, "qfv": "3C", "carga": "Moveis Planejados", "peso_nfe": 21500, "val": 160000, "transp": "Todeschini Logistica", "cnpj": "88.630.413/0001-40", "orig": "Bento Goncalves/RS", "dest": "Pelotas/RS"},
+    {"fab": "Scania", "mod": "P 320", "ano": 2020, "qfv": "2S3", "carga": "Areia Lavada", "peso_nfe": 41000, "val": 25000, "transp": "Mineracao Sul", "cnpj": "05.744.311/0001-70", "orig": "Guaiba/RS", "dest": "Porto Alegre/RS"},
+    {"fab": "Volvo", "mod": "FH 500", "ano": 2023, "qfv": "3S3S3", "carga": "Milho a Granel", "peso_nfe": 73000, "val": 175000, "transp": "Coamo Logistica", "cnpj": "78.590.446/0001-19", "orig": "Cruz Alta/RS", "dest": "Rio Grande/RS"},
+    {"fab": "Ford", "mod": "Cargo 1719", "ano": 2018, "qfv": "2C", "carga": "Encomendas E-commerce", "peso_nfe": 15000, "val": 250000, "transp": "Total Express", "cnpj": "73.939.449/0001-30", "orig": "Porto Alegre/RS", "dest": "Novo Hamburgo/RS"},
+    {"fab": "Mercedes-Benz", "mod": "Accelo 1017", "ano": 2021, "qfv": "2C", "carga": "Medicamentos", "peso_nfe": 15200, "val": 900000, "transp": "Profarma Logistica", "cnpj": "45.453.214/0001-30", "orig": "Cachoeirinha/RS", "dest": "Passo Fundo/RS"},
+    {"fab": "Scania", "mod": "R 450", "ano": 2022, "qfv": "3S2S2", "carga": "Trigo em Graos", "peso_nfe": 56500, "val": 118000, "transp": "Bunge Logistica", "cnpj": "84.046.101/0001-93", "orig": "Carazinho/RS", "dest": "Rio Grande/RS"},
+    {"fab": "Volvo", "mod": "FH 540", "ano": 2024, "qfv": "3S3", "carga": "Suco de Uva Concentrado", "peso_nfe": 51000, "val": 240000, "transp": "Salton Logistica", "cnpj": "88.235.874/0001-12", "orig": "Bento Goncalves/RS", "dest": "Santos/SP"},
+    {"fab": "DAF", "mod": "XF 530", "ano": 2023, "qfv": "3S3S3", "carga": "Adubo Organico", "peso_nfe": 72000, "val": 95000, "transp": "Fertisul", "cnpj": "02.914.460/0001-50", "orig": "Rio Grande/RS", "dest": "Passo Fundo/RS"},
+    {"fab": "Iveco", "mod": "Hi-Way 480", "ano": 2020, "qfv": "3S3", "carga": "Pneus Automotivos", "peso_nfe": 48000, "val": 620000, "transp": "Pirelli Logistica", "cnpj": "61.088.894/0001-08", "orig": "Gravatai/RS", "dest": "Uruguaiana/RS"},
+    {"fab": "Volkswagen", "mod": "Delivery 13.180", "ano": 2023, "qfv": "2C", "carga": "Autopecas", "peso_nfe": 14500, "val": 190000, "transp": "DPaschoal Logistica", "cnpj": "44.281.926/0001-01", "orig": "Canoas/RS", "dest": "Caxias do Sul/RS"},
+    {"fab": "Scania", "mod": "R 540", "ano": 2021, "qfv": "3S3S3", "carga": "Celulose Branqueada", "peso_nfe": 73500, "val": 245000, "transp": "CMPC Logistica", "cnpj": "14.789.654/0001-33", "orig": "Guaiba/RS", "dest": "Rio Grande/RS"},
+    {"fab": "Mercedes-Benz", "mod": "Axor 2544", "ano": 2020, "qfv": "3S3", "carga": "Madeira Serrada", "peso_nfe": 52000, "val": 78000, "transp": "Madeireira Vacaria", "cnpj": "90.336.412/0001-77", "orig": "Vacaria/RS", "dest": "Guaiba/RS"},
+    {"fab": "Volvo", "mod": "VM 270", "ano": 2019, "qfv": "3C", "carga": "Cerveja Artesanal", "peso_nfe": 22000, "val": 140000, "transp": "Log Ambev", "cnpj": "07.526.557/0001-00", "orig": "Viamao/RS", "dest": "Torres/RS"},
+    {"fab": "DAF", "mod": "CF 410", "ano": 2022, "qfv": "2S3", "carga": "Brita Graduada", "peso_nfe": 40500, "val": 30000, "transp": "Pedreira Rio-grandense", "cnpj": "92.741.660/0001-45", "orig": "Montenegro/RS", "dest": "Osorio/RS"},
+    {"fab": "Iveco", "mod": "Stralis 480", "ano": 2018, "qfv": "3S2S2", "carga": "Containers Refrigerados", "peso_nfe": 56500, "val": 780000, "transp": "Mercosul Line", "cnpj": "03.482.745/0001-66", "orig": "Rio Grande/RS", "dest": "Novo Hamburgo/RS"},
+    {"fab": "Volkswagen", "mod": "Meteor 29.520", "ano": 2024, "qfv": "3S3S3", "carga": "Farelo de Soja", "peso_nfe": 72500, "val": 165000, "transp": "ADM Logistica", "cnpj": "02.003.402/0001-42", "orig": "Cruz Alta/RS", "dest": "Rio Grande/RS"},
+    {"fab": "Scania", "mod": "G 410", "ano": 2020, "qfv": "2S3", "carga": "Gas GLP", "peso_nfe": 40000, "val": 185000, "transp": "Supergasbras", "cnpj": "27.163.062/0001-05", "orig": "Canoas/RS", "dest": "Bage/RS"},
+    {"fab": "Ford", "mod": "Cargo 2842", "ano": 2021, "qfv": "3S3", "carga": "Vidros Planos", "peso_nfe": 52500, "val": 230000, "transp": "Cebrace Logistica", "cnpj": "60.398.138/0001-77", "orig": "Sao Paulo/SP", "dest": "Porto Alegre/RS"},
+    {"fab": "Mercedes-Benz", "mod": "Atego 3033", "ano": 2023, "qfv": "4C", "carga": "Ceramica de Revestimento", "peso_nfe": 28500, "val": 175000, "transp": "Eliane Logistica", "cnpj": "84.683.408/0001-03", "orig": "Cocal do Sul/SC", "dest": "Porto Alegre/RS"},
+    {"fab": "Volvo", "mod": "FH 460", "ano": 2022, "qfv": "3S3", "carga": "Papel Kraft", "peso_nfe": 52000, "val": 135000, "transp": "Klabin Logistica", "cnpj": "89.636.920/0001-65", "orig": "Otacilio Costa/SC", "dest": "Canoas/RS"}
 ]
 
 HSWIM_CONFIG = {
@@ -230,6 +262,34 @@ def analisar_hswim(data: LeituraSensorHSWIM):
         "dif": dif,
         "peso_estatico_estimado_kg": peso_estatico_est,
         "status": acao,
+        # Descricao completa do veiculo simulado (para auditoria no historico)
+        "fabricante": veiculo["fabricante"],
+        "modelo": veiculo["modelo"],
+        "ano": veiculo["ano"],
+        "classe_qfv": sigla,
+        "descricao_classe": regra["descricao"],
+        "eixos_lidos": data.eixos_lidos,
+        "eixos_oficiais": eixos_oficiais,
+        "carga": veiculo["carga_declarada"],
+        "transportadora": veiculo.get("transportadora", "N/D"),
+        "empresa_cnpj": veiculo["empresa_cnpj"],
+        "origem": veiculo["origem"],
+        "destino": veiculo["destino"],
+        "peso_declarado_kg": peso_declarado,
+        "pbt_legal_kg": pbt_legal,
+        # Dados fiscais e de telemetria para o bloco expandivel de auditoria
+        "nfe_numero": veiculo["nfe_numero"],
+        "valor_carga": veiculo["valor_carga"],
+        "diferenca_kg": diferenca,
+        "limite_por_eixo_kg": limite_eixo,
+        "pesos_por_eixo_kg": pesos_eixos,
+        "eixos_em_sobrepeso": eixos_sobrepeso,
+        "alertas": {
+            "fiscal_sefaz": alerta_fiscal,
+            "transito_daer": alerta_transito,
+            "divergencia_eixos": divergencia_eixos,
+            "sobrepeso_eixo": len(eixos_sobrepeso) > 0,
+        },
     }
     db["historico_wim"].append(registro)
     salvar_banco(db)
@@ -284,32 +344,63 @@ def historico(limite: int = Query(50, le=500), placa: Optional[str] = None):
     return {"total": len(hist), "registros": list(reversed(hist[-limite:]))}
 
 @app.get("/api/estatisticas")
-def estatisticas():
+def estatisticas(periodo: str = Query("mensal", pattern="^(diario|semanal|mensal|todos)$")):
     db = carregar_banco()
     hist = db.get("historico_wim", [])
-    if not hist: 
-        return {"total_passagens": 0, "distribuicao_acoes": {}, "velocidade_media_kmh": 0, "fluxo_horario": []}
-    
+
+    # Filtro temporal por periodo (diario / semanal / mensal / todos)
+    agora = datetime.now()
+    janelas = {"diario": 1, "semanal": 7, "mensal": 30}
+    if periodo in janelas:
+        limite_data = agora - timedelta(days=janelas[periodo])
+
+        def dentro_periodo(h):
+            try:
+                return datetime.strptime(h["timestamp"], "%Y-%m-%d %H:%M:%S") >= limite_data
+            except (KeyError, ValueError):
+                return False
+
+        hist = [h for h in hist if dentro_periodo(h)]
+
+    if not hist:
+        return {"total_passagens": 0, "distribuicao_acoes": {}, "velocidade_media_kmh": 0, "fluxo_horario": [], "periodo": periodo, "agrupamento": "hora"}
+
+    # Agrupamento adaptativo: por hora no modo diario, por dia nos demais
+    agrupa_por_hora = periodo == "diario"
+
     acoes = {}
     vel_soma = 0.0
-    fluxo_hora = {}
-    
+    fluxo = {}  # label -> [chave_ordenacao, contagem]
+
     for h in hist:
         s = h.get("status", "?")
         acoes[s] = acoes.get(s, 0) + 1
         vel_soma += h.get("velocidade_kmh", 0)
-        
-        if "timestamp" in h:
-            hora = h["timestamp"].split(" ")[1][:2] + ":00"
-            fluxo_hora[hora] = fluxo_hora.get(hora, 0) + 1
 
-    bar_data = [{"hora": k, "passagens": v} for k, v in sorted(fluxo_hora.items())]
+        ts = h.get("timestamp")
+        if not ts:
+            continue
+        if agrupa_por_hora:
+            label = ts.split(" ")[1][:2] + ":00"
+            chave = label
+        else:
+            data_iso = ts.split(" ")[0]  # YYYY-MM-DD
+            p = data_iso.split("-")
+            label = f"{p[2]}/{p[1]}"      # DD/MM
+            chave = data_iso
+        if label not in fluxo:
+            fluxo[label] = [chave, 0]
+        fluxo[label][1] += 1
+
+    bar_data = [{"hora": k, "passagens": v[1]} for k, v in sorted(fluxo.items(), key=lambda x: x[1][0])]
 
     return {
         "total_passagens": len(hist),
         "distribuicao_acoes": acoes,
         "velocidade_media_kmh": round(vel_soma / len(hist), 1),
-        "fluxo_horario": bar_data
+        "fluxo_horario": bar_data,
+        "periodo": periodo,
+        "agrupamento": "hora" if agrupa_por_hora else "dia"
     }
 
 @app.post("/api/solicitar_desbloqueio")
